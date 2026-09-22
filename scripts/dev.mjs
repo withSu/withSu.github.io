@@ -5,7 +5,7 @@ import {spawn} from 'node:child_process';
 const root=process.cwd();
 const runBuild=()=>new Promise((resolve,reject)=>{const p=spawn(process.execPath,['scripts/build.mjs'],{stdio:'inherit'});p.on('close',c=>c===0?resolve():reject(new Error('Build failed')));});
 await runBuild();
-const mime={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.pdf':'application/pdf','.xml':'application/xml','.txt':'text/plain'};
+const mime={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.pdf':'application/pdf','.xml':'application/xml','.txt':'text/plain','.json':'application/json','.woff2':'font/woff2'};
 const server=http.createServer(async(req,res)=>{
   try{let url=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(url.endsWith('/'))url+='index.html';
     const file=path.resolve(root,'.'+url);if(!file.startsWith(root+path.sep))throw new Error('Invalid path');

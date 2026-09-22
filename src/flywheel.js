@@ -36,28 +36,49 @@ export function mountFlywheel(stage){
   for(let i=0;i<3;i++){const a=i*Math.PI*2/3,dot=new THREE.Mesh(new THREE.SphereGeometry(.04,14,12),i===0?blue:edge);dot.position.set(1.7*Math.cos(a),1.7*Math.sin(a),0);orientation.add(dot);dots.push(dot);}
   let phase=Number(document.querySelector('[data-phase][aria-pressed="true"]').dataset.phase),rotation=0,targetRotation=.28,frame=0,visible=true,lastTime=0;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const story=stage.closest('[data-research-story]');
+  let progress=0,targetProgress=0,scrollDirty=true;
+  function setPose(){
+    const p=reduced.matches?0:progress;
+    orientation.rotation.set(.58+Math.sin(p*Math.PI)*.64,-.40+p*.82,-.30+p*.35);
+    orientation.position.y=Math.sin(p*Math.PI)*.10;
+    wheel.rotation.z=rotation+p*Math.PI*2*1.25;
+  }
+  function measureScroll(){
+    scrollDirty=false;
+    if(!story||reduced.matches){targetProgress=0;return;}
+    const rect=story.getBoundingClientRect();
+    const travel=Math.max(rect.height-stage.offsetHeight,window.innerHeight*.62);
+    targetProgress=THREE.MathUtils.clamp((108-rect.top)/travel,0,1);
+  }
   function render(){renderer.render(scene,camera);}
-  const resize=new ResizeObserver(()=>{const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();render();});resize.observe(stage);
+  const resize=new ResizeObserver(()=>{const r=stage.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();scrollDirty=true;start();});resize.observe(stage);
   function animate(time){frame=0;if(!visible||document.hidden)return;const delta=Math.min((time-lastTime)/1000,.04);lastTime=time;
-    if(!reduced.matches){const gap=targetRotation-rotation;if(Math.abs(gap)>.001)rotation+=gap*Math.min(delta*5,1);}
-    wheel.rotation.z=rotation;render();if(!reduced.matches&&Math.abs(targetRotation-rotation)>.001)frame=requestAnimationFrame(animate);
+    if(scrollDirty)measureScroll();
+    if(!reduced.matches){rotation+=(targetRotation-rotation)*(1-Math.exp(-delta*5));progress+=(targetProgress-progress)*(1-Math.exp(-delta*8));}
+    setPose();render();if(!reduced.matches&&(Math.abs(targetRotation-rotation)>.001||Math.abs(targetProgress-progress)>.0001))frame=requestAnimationFrame(animate);
   }
   function start(){if(!frame){lastTime=performance.now();frame=requestAnimationFrame(animate);}}
   function stop(){cancelAnimationFrame(frame);frame=0;}
   const changePhase=event=>{
     const next=event.detail.phase;if(next===phase)return;phase=next;
     dots.forEach((dot,i)=>dot.material=i===phase?blue:edge);
-    targetRotation+=Math.PI*2/3;if(reduced.matches||!event.detail.animated){rotation=targetRotation;wheel.rotation.z=rotation;render();}else start();
+    targetRotation+=Math.PI*2/3;if(reduced.matches||!event.detail.animated){rotation=targetRotation;setPose();render();}else start();
   };
   stage.addEventListener('phasechange',changePhase);
   dots.forEach((dot,i)=>dot.material=i===phase?blue:edge);
+  const onScroll=()=>{scrollDirty=true;if(visible&&!reduced.matches)start();};
+  window.addEventListener('scroll',onScroll,{passive:true});
+  const theme=()=>{const dark=document.documentElement.dataset.theme==='dark';blue.color.setHex(dark?0x2698ba:0xb509ac);metal.color.setHex(dark?0x8095ad:0x9cabc0);orbit.material.opacity=dark?.38:.5;render();};
+  window.addEventListener('site-themechange',theme);theme();
   const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;visible?start():stop();});observer.observe(stage);
   const visibility=()=>{document.hidden?stop():start();};document.addEventListener('visibilitychange',visibility);
-  reduced.addEventListener('change',()=>{stop();if(reduced.matches){rotation=targetRotation;wheel.rotation.z=rotation;render();}else start();});
+  const motionPreference=()=>{stop();scrollDirty=true;if(reduced.matches){rotation=targetRotation;progress=targetProgress=0;setPose();render();}else start();};
+  reduced.addEventListener('change',motionPreference);
   // Keep the static text fallback useful if the GPU context is lost.
   canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();stop();stage.classList.remove('ready');});
   canvas.addEventListener('webglcontextrestored',()=>{stage.classList.add('ready');start();});
-  stage.classList.add('ready');render();start();
-  window.addEventListener('pageshow',event=>{if(event.persisted)start();});
-  window.addEventListener('pagehide',event=>{stop();if(event.persisted)return;resize.disconnect();observer.disconnect();document.removeEventListener('visibilitychange',visibility);stage.removeEventListener('phasechange',changePhase);scene.traverse(object=>{object.geometry?.dispose();});[metal,edge,blue].forEach(m=>m.dispose());renderer.dispose();});
+  measureScroll();progress=targetProgress;setPose();stage.classList.add('ready');render();start();
+  window.addEventListener('pageshow',event=>{if(event.persisted){scrollDirty=true;start();}});
+  window.addEventListener('pagehide',event=>{stop();if(event.persisted)return;resize.disconnect();observer.disconnect();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('scroll',onScroll);window.removeEventListener('site-themechange',theme);reduced.removeEventListener('change',motionPreference);stage.removeEventListener('phasechange',changePhase);scene.traverse(object=>{object.geometry?.dispose();});[metal,edge,blue,orbit.material].forEach(m=>m.dispose());renderer.dispose();});
 }

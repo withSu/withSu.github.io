@@ -1,14 +1,18 @@
 # Bumsu Kim — Research homepage
 
-CV-first academic website for https://withsu.github.io.
+Academic website for https://withsu.github.io.
 
 ## Structure
 
-- `/`: CV, education, research experience, and linked projects
-- `/papers/`: publications and individual paper pages
-- `/research/`: research interests and an interactive 3D learning flywheel
+- `/`: About, biography, research summary, and news
+- `/research/`: Research Interests with a scroll-driven 3D learning flywheel
+- `/publications/`: Publications and individual paper pages
+- `/cv/`: CV, education, research experience, and linked project pages
+- `/papers/`: redirect for the original publications URL
 - `/notes/`: reading notes and individual articles
 - `/assets/Bumsu-Kim-CV.pdf`: CV generated from the same profile data
+
+The four main tabs follow a restrained academic layout inspired by [766o.github.io](https://766o.github.io/), using a charcoal background by default. A light theme is available. Search opens with the search icon or Cmd/Ctrl+K and includes pages, projects, publications, and notes. The research flywheel tilts and rotates with scroll; reduced-motion preferences disable scroll animation.
 
 ## Local development
 
@@ -42,3 +46,7 @@ Generated HTML, CSS, JavaScript, and the PDF are checked into the repository so 
 - Research statements are a website draft based on these interests; no benchmark results, publications, awards, or unconfirmed degree details are claimed.
 
 The previous blog is retained in Git history.
+
+## Third-party assets
+
+Roboto is self-hosted under the SIL Open Font License; Lucide icons use the ISC license; Three.js uses the MIT license. Copies are in `licenses/`.
