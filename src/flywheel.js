@@ -42,7 +42,7 @@ export function mountFlywheel(stage){
   function setPose(){
     const p=reduced.matches?0:progress;
     orientation.rotation.set(.20+Math.sin(p*Math.PI)*.16,-.18+p*.38,-.015+p*.025);
-    const state=diagram.setTime(reduced.matches?2.1:elapsed);
+    const state=diagram.setTime(reduced.matches?4.3:elapsed);
     if(state.phase!==phase){
       phase=state.phase;
       for(const [name,node] of Object.entries(labelNodes))node.dataset.active=String(name===phase);
