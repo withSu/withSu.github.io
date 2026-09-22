@@ -25,4 +25,17 @@ dialog.addEventListener('keydown',event=>{const links=[...results.querySelectorA
 if(!/Mac|iPhone|iPad/.test(navigator.platform))document.querySelector('.search-trigger kbd').textContent='Ctrl K';
 
 const stage=document.querySelector('[data-flywheel]');
-if(stage){const captions=['Generate candidate responses, behaviors, or solutions.','Evaluate outcomes and identify useful feedback.','Carry useful feedback into the next iteration.'];document.querySelectorAll('[data-phase]').forEach(button=>button.addEventListener('click',event=>{const phase=Number(button.dataset.phase);document.querySelectorAll('[data-phase]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.phase)===phase)));document.querySelector('.cycle-description').textContent=captions[phase];stage.dispatchEvent(new CustomEvent('phasechange',{detail:{phase,animated:event.detail!==0}}));}));const observer=new IntersectionObserver(async entries=>{if(!entries.some(e=>e.isIntersecting))return;observer.disconnect();try{const {mountFlywheel}=await import('./flywheel.js');mountFlywheel(stage);}catch(error){console.warn('Flywheel unavailable; the research content remains readable.',error);}},{rootMargin:'150px'});observer.observe(stage);}
+if(stage){
+  const captions=['Generate several candidate responses or solutions.','Evaluate candidates and extract useful feedback.','Use feedback to update the model and inform the next generation.'];
+  const buttons=[...document.querySelectorAll('[data-phase]')];
+  function showPhase(phase){buttons.forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.phase)===phase)));document.querySelector('.cycle-description').textContent=captions[phase];}
+  buttons.forEach(button=>button.addEventListener('click',event=>{const phase=Number(button.dataset.phase);showPhase(phase);stage.dispatchEvent(new CustomEvent('phasechange',{detail:{phase,animated:event.detail!==0}}));}));
+  stage.addEventListener('learningphasechange',event=>showPhase(event.detail.phase));
+  const observer=new IntersectionObserver(async entries=>{
+    if(!entries.some(e=>e.isIntersecting))return;
+    observer.disconnect();
+    try{const {mountFlywheel}=await import('./flywheel.js');mountFlywheel(stage);}
+    catch(error){console.warn('Learning loop unavailable; the research content remains readable.',error);}
+  },{rootMargin:'150px'});
+  observer.observe(stage);
+}

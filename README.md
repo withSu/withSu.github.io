@@ -12,7 +12,7 @@ Academic website for https://withsu.github.io.
 - `/notes/`: reading notes and individual articles
 - `/assets/Bumsu-Kim-CV.pdf`: CV generated from the same profile data
 
-The four main tabs follow a restrained academic layout inspired by [766o.github.io](https://766o.github.io/), using a charcoal background by default. A light theme is available. Search opens with the search icon or Cmd/Ctrl+K and includes pages, projects, publications, and notes. The research flywheel tilts and rotates with scroll; reduced-motion preferences disable scroll animation.
+The four main tabs follow a restrained academic layout inspired by [766o.github.io](https://766o.github.io/), using a charcoal background by default. A light theme is available. Search opens with the search icon or Cmd/Ctrl+K and includes pages, projects, publications, and notes. The research graphic shows candidate generation, evaluation, and feedback to the model. Scrolling and phase buttons move through the cycle; reduced-motion preferences disable scroll animation.
 
 ## Local development
 

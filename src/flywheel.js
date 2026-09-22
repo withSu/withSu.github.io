@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
-import {createLearningLoopGeometry} from './learning-loop.mjs';
+import {createFeedbackLoop} from './feedback-loop.mjs';
 
 export function mountFlywheel(stage){
   const canvas=stage.querySelector('canvas');
@@ -29,28 +29,39 @@ export function mountFlywheel(stage){
   key.position.set(-3,5,4);scene.add(key);
   const fill=new THREE.DirectionalLight(0xe5edf5,.8);
   fill.position.set(3,-2,3);scene.add(fill);
-  const silver=new THREE.MeshPhysicalMaterial({color:0xd3d8dc,metalness:1,roughness:.25,clearcoat:.15,clearcoatRoughness:.3,envMapIntensity:1.1});
-  const accent=new THREE.MeshPhysicalMaterial({color:0x538ea0,metalness:.8,roughness:.3,clearcoat:.15,clearcoatRoughness:.3,envMapIntensity:1.1});
-  const orientation=new THREE.Group();scene.add(orientation);
-  const wheel=new THREE.Mesh(createLearningLoopGeometry(),[silver,accent]);
-  orientation.add(wheel);
+  const diagram=createFeedbackLoop();
+  const orientation=new THREE.Group();scene.add(orientation);orientation.add(diagram.group);
+  const labelNodes=Object.fromEntries([...stage.querySelectorAll('[data-learning-label]')].map(el=>[el.dataset.learningLabel,el]));
+  const projected=new THREE.Vector3();
+  let stageWidth=0,stageHeight=0;
 
   const story=stage.closest('[data-research-story]');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   let phase=Number(document.querySelector('[data-phase][aria-pressed="true"]')?.dataset.phase||0);
-  let rotation=phase*Math.PI*2/3,targetRotation=rotation,progress=0,targetProgress=0;
+  let progress=0,targetProgress=0,learningProgress=0,manualProgress=null;
+  const phasePositions=[.20,.55,1];
+  if(phase!==0)manualProgress=phasePositions[phase];
   let frame=0,lastTime=0,visible=true,scrollDirty=true,contextLost=false,disposed=false;
   function setPose(){
     const p=reduced.matches?0:progress;
-    orientation.rotation.set(.23+Math.sin(p*Math.PI)*.6,-.55+p*.85,-.20+p*.12);
-    wheel.rotation.z=rotation+p*Math.PI*1.35;
+    orientation.rotation.set(.20+Math.sin(p*Math.PI)*.16,-.18+p*.38,-.015+p*.025);
+    const state=diagram.setProgress(learningProgress);
+    if(state.phase!==phase){phase=state.phase;stage.dispatchEvent(new CustomEvent('learningphasechange',{detail:{phase}}));}
+    if(labelNodes.model){labelNodes.model.textContent=state.updated?'Updated model':'Model';labelNodes.model.dataset.updated=String(state.updated);}
+    if(labelNodes.candidates)labelNodes.candidates.textContent=state.nextCandidates?'New candidates':'Candidates';
+    orientation.updateMatrixWorld(true);camera.updateMatrixWorld();
+    for(const [name,node] of Object.entries(labelNodes)){
+      projected.setFromMatrixPosition(diagram.anchors[name].matrixWorld).project(camera);
+      node.style.transform=`translate3d(${(projected.x*.5+.5)*stageWidth}px,${(-projected.y*.5+.5)*stageHeight}px,0) translate(-50%,-50%)`;
+    }
   }
   function measureScroll(){
     scrollDirty=false;
     if(!story||reduced.matches){targetProgress=0;return;}
     const rect=story.getBoundingClientRect();
-    const travel=Math.max(rect.height-stage.offsetHeight,window.innerHeight*.62);
-    targetProgress=THREE.MathUtils.clamp((92-rect.top)/travel,0,1);
+    const visual=stage.closest('.research-visual');
+    const travel=Math.max(rect.height-(visual?.offsetHeight||stage.offsetHeight),window.innerHeight*.35);
+    targetProgress=THREE.MathUtils.clamp((76-rect.top)/travel,0,1);
   }
   function render(){if(!contextLost&&!disposed)renderer.render(scene,camera);}
   function animate(time){
@@ -59,42 +70,34 @@ export function mountFlywheel(stage){
     const delta=Math.min((time-lastTime)/1000,.04);lastTime=time;
     if(scrollDirty)measureScroll();
     if(!reduced.matches){
-      rotation+=(targetRotation-rotation)*(1-Math.exp(-delta*8));
+      learningProgress+=((manualProgress??targetProgress)-learningProgress)*(1-Math.exp(-delta*8));
       progress+=(targetProgress-progress)*(1-Math.exp(-delta*9));
     }
     setPose();render();
-    if(!reduced.matches&&(Math.abs(targetRotation-rotation)>.001||Math.abs(targetProgress-progress)>.0001))frame=requestAnimationFrame(animate);
+    if(!reduced.matches&&(Math.abs((manualProgress??targetProgress)-learningProgress)>.0001||Math.abs(targetProgress-progress)>.0001))frame=requestAnimationFrame(animate);
   }
   function start(){
     if(!frame&&!contextLost&&!disposed&&visible&&!document.hidden){lastTime=performance.now();frame=requestAnimationFrame(animate);}
   }
   function stop(){cancelAnimationFrame(frame);frame=0;}
-  const resize=new ResizeObserver(()=>{
+  const updateSize=()=>{
     const {width,height}=stage.getBoundingClientRect();
     if(!width||!height)return;
-    renderer.setSize(width,height,false);
+    stageWidth=width;stageHeight=height;renderer.setSize(width,height,false);
     camera.aspect=width/height;camera.updateProjectionMatrix();
     scrollDirty=true;start();
-  });
-  resize.observe(stage);
+  };
+  const resize=new ResizeObserver(updateSize);
+  resize.observe(stage);updateSize();
   const changePhase=event=>{
-    const next=event.detail.phase;
-    if(next===phase)return;
-    const step=(next-phase+3)%3;phase=next;
-    targetRotation+=step*Math.PI*2/3;
-    if(reduced.matches||!event.detail.animated){rotation=targetRotation;setPose();render();}
+    manualProgress=phasePositions[event.detail.phase];
+    if(reduced.matches||!event.detail.animated){learningProgress=manualProgress;setPose();render();}
     else start();
   };
   stage.addEventListener('phasechange',changePhase);
-  const onScroll=()=>{scrollDirty=true;if(!reduced.matches)start();};
+  const onScroll=()=>{if(reduced.matches)return;manualProgress=null;scrollDirty=true;start();};
   window.addEventListener('scroll',onScroll,{passive:true});
-  const theme=()=>{
-    const dark=document.documentElement.dataset.theme==='dark';
-    silver.color.setHex(dark?0xd3d8dc:0xa1a9b1);
-    accent.color.setHex(dark?0x538ea0:0x56798d);
-    silver.envMapIntensity=accent.envMapIntensity=dark?1.1:.95;
-    render();
-  };
+  const theme=()=>{diagram.setTheme(document.documentElement.dataset.theme==='dark');render();};
   window.addEventListener('site-themechange',theme);theme();
   const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;visible?start():stop();});
   observer.observe(stage);
@@ -102,7 +105,7 @@ export function mountFlywheel(stage){
   document.addEventListener('visibilitychange',visibility);
   const motionPreference=()=>{
     stop();scrollDirty=true;
-    if(reduced.matches){rotation=targetRotation;progress=targetProgress=0;setPose();render();}
+    if(reduced.matches){progress=targetProgress=0;learningProgress=manualProgress??phasePositions[phase];setPose();render();}
     else start();
   };
   reduced.addEventListener('change',motionPreference);
@@ -127,9 +130,9 @@ export function mountFlywheel(stage){
     stage.removeEventListener('phasechange',changePhase);
     canvas.removeEventListener('webglcontextlost',lost);
     canvas.removeEventListener('webglcontextrestored',restored);
-    wheel.geometry.dispose();silver.dispose();accent.dispose();environment?.dispose();renderer.dispose();
+    diagram.dispose();environment?.dispose();renderer.dispose();
   };
   window.addEventListener('pageshow',pageshow);
   window.addEventListener('pagehide',pagehide);
-  measureScroll();progress=targetProgress;setPose();stage.classList.add('ready');start();
+  measureScroll();progress=targetProgress;learningProgress=manualProgress??(reduced.matches?phasePositions[phase]:targetProgress);setPose();stage.classList.add('ready');start();
 }
