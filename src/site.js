@@ -29,7 +29,7 @@ if(outline){
   const toggle=outline.querySelector('.toc-toggle');
   const links=[...outline.querySelectorAll('a[href^="#"]')];
   const sections=links.map(link=>document.getElementById(link.hash.slice(1)));
-  let active=-1,scrollFrame=0;
+  let active=-1,scrollFrame=0,requested=-1,settling=false,settleTimer=0;
   function setOutlineOpen(open){outline.dataset.open=String(open);toggle.setAttribute('aria-expanded',String(open));}
   function updateOutline(){
     scrollFrame=0;
@@ -38,25 +38,52 @@ if(outline){
     sections.forEach((section,i)=>{if(section.getBoundingClientRect().top<=marker)next=i;});
     const end=document.documentElement.scrollHeight-window.innerHeight;
     if(end>1&&window.scrollY>=end-2)next=sections.length-1;
+    // Several anchors can share the same clamped scroll position near the page end.
+    if(requested>=0)next=requested;
     if(next===active)return;
     active=next;
     links.forEach((link,i)=>{if(i===active)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});
   }
   function queueOutline(){if(!scrollFrame)scrollFrame=requestAnimationFrame(updateOutline);}
+  function settleAnchor(){
+    clearTimeout(settleTimer);
+    settleTimer=setTimeout(()=>{settling=false;},180);
+  }
+  function selectAnchor(hash){
+    requested=links.findIndex(link=>link.hash===hash);
+    settling=requested>=0;
+    if(settling)settleAnchor();else clearTimeout(settleTimer);
+    queueOutline();
+  }
+  function resumeTracking(){
+    requested=-1;settling=false;clearTimeout(settleTimer);queueOutline();
+  }
+  function onOutlineScroll(){
+    if(settling)settleAnchor();else requested=-1;
+    queueOutline();
+  }
   toggle.addEventListener('click',()=>setOutlineOpen(outline.dataset.open!=='true'));
   outline.addEventListener('click',event=>{
     const link=event.target.closest('a[href^="#"]');
     if(!link||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
     setOutlineOpen(false);
+    selectAnchor(link.hash);
     if(event.detail===0){root.style.scrollBehavior='auto';requestAnimationFrame(()=>root.style.removeProperty('scroll-behavior'));}
     queueOutline();
   });
   outline.addEventListener('keydown',event=>{if(event.key==='Escape'&&outline.dataset.open==='true'){setOutlineOpen(false);toggle.focus();}});
-  window.addEventListener('scroll',queueOutline,{passive:true});
+  window.addEventListener('scroll',onOutlineScroll,{passive:true});
+  window.addEventListener('wheel',resumeTracking,{passive:true});
+  window.addEventListener('touchmove',resumeTracking,{passive:true});
+  window.addEventListener('keydown',event=>{
+    if(dialog.open||event.target.closest('input,textarea,[contenteditable="true"]'))return;
+    if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].includes(event.key))resumeTracking();
+  });
   window.addEventListener('resize',queueOutline);
-  window.addEventListener('hashchange',queueOutline);
-  window.addEventListener('pageshow',queueOutline);
+  window.addEventListener('hashchange',()=>selectAnchor(location.hash));
+  window.addEventListener('pageshow',event=>{if(event.persisted)resumeTracking();else selectAnchor(location.hash);});
   document.fonts.ready.then(queueOutline);
+  selectAnchor(location.hash);
   updateOutline();
 }
 
