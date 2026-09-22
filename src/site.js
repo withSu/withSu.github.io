@@ -26,11 +26,6 @@ if(!/Mac|iPhone|iPad/.test(navigator.platform))document.querySelector('.search-t
 
 const stage=document.querySelector('[data-flywheel]');
 if(stage){
-  const captions=['Generate several candidate responses or solutions.','Evaluate candidates and extract useful feedback.','Use feedback to update the model and inform the next generation.'];
-  const buttons=[...document.querySelectorAll('[data-phase]')];
-  function showPhase(phase){buttons.forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.phase)===phase)));document.querySelector('.cycle-description').textContent=captions[phase];}
-  buttons.forEach(button=>button.addEventListener('click',event=>{const phase=Number(button.dataset.phase);showPhase(phase);stage.dispatchEvent(new CustomEvent('phasechange',{detail:{phase,animated:event.detail!==0}}));}));
-  stage.addEventListener('learningphasechange',event=>showPhase(event.detail.phase));
   const observer=new IntersectionObserver(async entries=>{
     if(!entries.some(e=>e.isIntersecting))return;
     observer.disconnect();

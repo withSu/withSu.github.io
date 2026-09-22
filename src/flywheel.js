@@ -37,18 +37,16 @@ export function mountFlywheel(stage){
 
   const story=stage.closest('[data-research-story]');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-  let phase=Number(document.querySelector('[data-phase][aria-pressed="true"]')?.dataset.phase||0);
-  let progress=0,targetProgress=0,learningProgress=0,manualProgress=null;
-  const phasePositions=[.20,.55,1];
-  if(phase!==0)manualProgress=phasePositions[phase];
+  let phase='',progress=0,targetProgress=0,elapsed=0;
   let frame=0,lastTime=0,visible=true,scrollDirty=true,contextLost=false,disposed=false;
   function setPose(){
     const p=reduced.matches?0:progress;
     orientation.rotation.set(.20+Math.sin(p*Math.PI)*.16,-.18+p*.38,-.015+p*.025);
-    const state=diagram.setProgress(learningProgress);
-    if(state.phase!==phase){phase=state.phase;stage.dispatchEvent(new CustomEvent('learningphasechange',{detail:{phase}}));}
-    if(labelNodes.model){labelNodes.model.textContent=state.updated?'Updated model':'Model';labelNodes.model.dataset.updated=String(state.updated);}
-    if(labelNodes.candidates)labelNodes.candidates.textContent=state.nextCandidates?'New candidates':'Candidates';
+    const state=diagram.setTime(reduced.matches?2.1:elapsed);
+    if(state.phase!==phase){
+      phase=state.phase;
+      for(const [name,node] of Object.entries(labelNodes))node.dataset.active=String(name===phase);
+    }
     orientation.updateMatrixWorld(true);camera.updateMatrixWorld();
     for(const [name,node] of Object.entries(labelNodes)){
       projected.setFromMatrixPosition(diagram.anchors[name].matrixWorld).project(camera);
@@ -70,11 +68,11 @@ export function mountFlywheel(stage){
     const delta=Math.min((time-lastTime)/1000,.04);lastTime=time;
     if(scrollDirty)measureScroll();
     if(!reduced.matches){
-      learningProgress+=((manualProgress??targetProgress)-learningProgress)*(1-Math.exp(-delta*8));
+      elapsed+=delta;
       progress+=(targetProgress-progress)*(1-Math.exp(-delta*9));
     }
     setPose();render();
-    if(!reduced.matches&&(Math.abs((manualProgress??targetProgress)-learningProgress)>.0001||Math.abs(targetProgress-progress)>.0001))frame=requestAnimationFrame(animate);
+    if(!reduced.matches)frame=requestAnimationFrame(animate);
   }
   function start(){
     if(!frame&&!contextLost&&!disposed&&visible&&!document.hidden){lastTime=performance.now();frame=requestAnimationFrame(animate);}
@@ -89,13 +87,7 @@ export function mountFlywheel(stage){
   };
   const resize=new ResizeObserver(updateSize);
   resize.observe(stage);updateSize();
-  const changePhase=event=>{
-    manualProgress=phasePositions[event.detail.phase];
-    if(reduced.matches||!event.detail.animated){learningProgress=manualProgress;setPose();render();}
-    else start();
-  };
-  stage.addEventListener('phasechange',changePhase);
-  const onScroll=()=>{if(reduced.matches)return;manualProgress=null;scrollDirty=true;start();};
+  const onScroll=()=>{if(reduced.matches)return;scrollDirty=true;start();};
   window.addEventListener('scroll',onScroll,{passive:true});
   const theme=()=>{diagram.setTheme(document.documentElement.dataset.theme==='dark');render();};
   window.addEventListener('site-themechange',theme);theme();
@@ -105,7 +97,7 @@ export function mountFlywheel(stage){
   document.addEventListener('visibilitychange',visibility);
   const motionPreference=()=>{
     stop();scrollDirty=true;
-    if(reduced.matches){progress=targetProgress=0;learningProgress=manualProgress??phasePositions[phase];setPose();render();}
+    if(reduced.matches){progress=targetProgress=0;setPose();render();}
     else start();
   };
   reduced.addEventListener('change',motionPreference);
@@ -127,12 +119,11 @@ export function mountFlywheel(stage){
     window.removeEventListener('pageshow',pageshow);
     window.removeEventListener('pagehide',pagehide);
     reduced.removeEventListener('change',motionPreference);
-    stage.removeEventListener('phasechange',changePhase);
     canvas.removeEventListener('webglcontextlost',lost);
     canvas.removeEventListener('webglcontextrestored',restored);
     diagram.dispose();environment?.dispose();renderer.dispose();
   };
   window.addEventListener('pageshow',pageshow);
   window.addEventListener('pagehide',pagehide);
-  measureScroll();progress=targetProgress;learningProgress=manualProgress??(reduced.matches?phasePositions[phase]:targetProgress);setPose();stage.classList.add('ready');start();
+  measureScroll();progress=targetProgress;setPose();stage.classList.add('ready');start();
 }
