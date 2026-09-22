@@ -42,7 +42,6 @@ Generated HTML, CSS, JavaScript, and the PDF are checked into the repository so 
 - Name, lab affiliation, research areas, public email, and portrait: [IMC Lab members](https://imc.hanyang.ac.kr/composition/).
 - Official lab name and department: [IMC Lab](https://imc.hanyang.ac.kr/).
 - Education and research experience dates, CBNU research topic, and absence of public paper links: supplied by Bumsu Kim on September 22, 2026.
-- Associative-memory project summary: [the public project repository](https://github.com/withSu/Long-term-Memory-Chatbot-with-Associative-Recall).
 - Research statements are a website draft based on these interests; no benchmark results, publications, awards, or unconfirmed degree details are claimed.
 
 The previous blog is retained in Git history.

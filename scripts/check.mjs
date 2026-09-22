@@ -38,7 +38,6 @@ for(const entry of index)assert.ok(documents.has(entry.url==='/'?'index.html':en
 assert.equal(searchEntries(index,'CV')[0].url,'/cv/');
 assert.equal(searchEntries(index,'  ＣＶ  ')[0].url,'/cv/');
 assert.ok(searchEntries(index,'반도체').some(e=>e.url==='/projects/semiconductor-anomaly-detection/'));
-assert.ok(searchEntries(index,'associative recall').some(e=>e.url==='/projects/associative-memory/'));
 assert.ok(searchEntries(index,'self-improvement').some(e=>e.url==='/research/'));
 assert.equal(searchEntries(index,'zzzzzznoresult').length,0);
 assert.ok(index.every(e=>!e.url.includes('template')&&!e.url.includes('/drafts/')));
