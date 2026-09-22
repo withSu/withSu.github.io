@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {searchEntries} from '../src/search.mjs';
 const manifest=JSON.parse(await fs.readFile('.generated-files.json','utf8'));
@@ -32,6 +33,10 @@ assert.ok(documents.get('publications/index.html').includes('No public paper lin
 assert.ok(documents.get('notes/index.html').includes('No notes have been published yet.'),'Notes empty state');
 const pdf=await fs.readFile('assets/Bumsu-Kim-CV.pdf');assert.equal(pdf.subarray(0,4).toString(),'%PDF','Valid PDF header');
 const app=await fs.readFile('assets/app.js','utf8');for(const match of app.matchAll(/import\("([^"\n]+)"\)/g))assert.ok(manifest.includes(path.posix.join('assets',match[1])),`Missing JS chunk: ${match[1]}`);
+for(const asset of ['assets/app.js','assets/site.css']){
+  const version=createHash('sha256').update(await fs.readFile(asset)).digest('hex').slice(0,12);
+  for(const [file,html] of documents)if(file!=='papers/index.html')assert.ok(html.includes(`"/${asset}?v=${version}"`),`${file}: stale asset URL for ${asset}`);
+}
 const declared=new Set(manifest);assert.equal(manifest.length,declared.size,'No duplicate generated paths');
 const index=JSON.parse(await fs.readFile('assets/search.json','utf8'));
 for(const entry of index)assert.ok(documents.has(entry.url==='/'?'index.html':entry.url.slice(1)+'index.html'),`Search result exists: ${entry.url}`);

@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 import {build} from 'esbuild';
 import matter from 'gray-matter';
 import {marked} from 'marked';
@@ -27,6 +28,14 @@ await write('assets/roboto-latin.woff2',await fs.readFile('node_modules/@fontsou
 await write('assets/favicon.svg','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="5" fill="#1c1c1d"/><text x="20" y="28" text-anchor="middle" font-family="Arial,sans-serif" font-weight="300" font-size="27" fill="#2698ba">b</text></svg>');
 const js=await build({entryPoints:{app:'src/site.js'},bundle:true,format:'esm',splitting:true,outdir:'assets',chunkNames:'[name]-[hash]',minify:true,target:['es2022'],metafile:true});generated.push(...Object.keys(js.metafile.outputs));
 await createPDF(profile,projects,papers);generated.push('assets/Bumsu-Kim-CV.pdf');
+// Change asset URLs when their contents change so a normal reload gets the new UI.
+const assetVersions=await Promise.all(['assets/app.js','assets/site.css'].map(async file=>[file,createHash('sha256').update(await fs.readFile(file)).digest('hex').slice(0,12)]));
+for(const file of generated.filter(file=>file.endsWith('.html'))){
+  let html=await fs.readFile(file,'utf8');
+  for(const [asset,version] of assetVersions)html=html.replaceAll(`"/${asset}"`,`"/${asset}?v=${version}"`);
+  await fs.writeFile(file,html);
+}
+
 await write('.nojekyll','');
 await write('robots.txt',`User-agent: *\nAllow: /\nSitemap: ${profile.siteUrl}/sitemap.xml\n`);
 await write('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${documents.map(p=>`<url><loc>${profile.siteUrl}${p.url}</loc></url>`).join('')}</urlset>`);
