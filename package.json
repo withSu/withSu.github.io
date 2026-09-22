@@ -1,27 +1,20 @@
 {
-  "name": "minimal-mistakes",
+  "name": "bumsu-kim-research-homepage",
+  "version": "1.0.0",
   "private": true,
-  "version": "4.26.2",
-  "description": "Minimal Mistakes 2 column Jekyll theme.",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mmistakes/minimal-mistakes.git"
+  "type": "module",
+  "description": "CV, papers, research interests, and notes for Bumsu Kim.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "check": "node scripts/check.mjs"
   },
-  "keywords": [
-    "jekyll",
-    "theme",
-    "minimal"
-  ],
-  "author": "Michael Rose",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/mmistakes/minimal-mistakes/issues"
-  },
-  "homepage": "https://mmistakes.github.io/minimal-mistakes/",
-  "engines": {
-    "node": ">= 0.10.0"
-  },
-  "devDependencies": {
-    "uglify-js": "^3.17.4"
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "esbuild": "0.28.2",
+    "gray-matter": "4.0.3",
+    "marked": "18.0.13",
+    "pdfkit": "0.20.2",
+    "three": "0.186.0"
   }
 }

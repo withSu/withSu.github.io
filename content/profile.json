@@ -1,0 +1,22 @@
+{
+  "name": "Bumsu Kim",
+  "role": "Integrated M.S./Ph.D. Student",
+  "affiliation": "Hanyang University",
+  "lab": "Intelligent Mobile Computing Lab",
+  "labShort": "IMC Lab",
+  "labUrl": "https://imc.hanyang.ac.kr/",
+  "department": "Department of Data Science",
+  "location": "Seoul, South Korea",
+  "email": "kbsbmori3@gmail.com",
+  "github": "https://github.com/withSu",
+  "scholar": "",
+  "siteUrl": "https://withsu.github.io",
+  "intro": "I am an integrated M.S./Ph.D. student at Hanyang University and a member of the Intelligent Mobile Computing Lab. My research interests center on self-improving and self-evolving AI, with interests in multimodal learning and industrial anomaly detection.",
+  "interests": ["MLLM self-improvement", "Self-evolving AI", "Multimodal learning", "Industrial anomaly detection"],
+  "education": [{ "degree": "Integrated M.S./Ph.D. Program", "institution": "Hanyang University", "period": "Sep 2026 - Present", "detail": "Started September 1, 2026." }],
+  "experience": [
+    { "role": "Research Member", "institution": "Intelligent Mobile Computing Lab, Hanyang University", "period": "Jan 2026 - Present", "detail": "Joined IMC Lab in January 2026; began the integrated M.S./Ph.D. program in September 2026.", "url": "https://imc.hanyang.ac.kr/" },
+    { "role": "Undergraduate Research", "institution": "CBNU Robotics Lab", "period": "Sep 2024 - Dec 2025", "detail": "Object-level anomaly detection for semiconductor microdevices.", "url": "/projects/semiconductor-anomaly-detection/" }
+  ],
+  "awards": []
+}
