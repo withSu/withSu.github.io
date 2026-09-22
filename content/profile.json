@@ -5,18 +5,49 @@
   "lab": "Intelligent Mobile Computing Lab",
   "labShort": "IMC Lab",
   "labUrl": "https://imc.hanyang.ac.kr/",
-  "department": "Department of Data Science",
+  "department": "Department of Artificial Intelligence",
   "location": "Seoul, South Korea",
   "email": "bmori3@hanyang.ac.kr",
   "github": "https://github.com/withSu",
   "scholar": "",
   "siteUrl": "https://withsu.github.io",
   "intro": "I am an integrated M.S./Ph.D. student at Hanyang University and a member of the Intelligent Mobile Computing Lab. My research interests center on self-improving and self-evolving AI, with interests in multimodal learning and industrial anomaly detection.",
-  "interests": ["MLLM self-improvement", "Self-evolving AI", "Multimodal learning", "Industrial anomaly detection"],
-  "education": [{ "degree": "Integrated M.S./Ph.D. Program", "institution": "Hanyang University", "period": "Sep 2026 - Present", "detail": "Started September 1, 2026." }],
+  "interests": [
+    "MLLM self-improvement",
+    "Self-evolving AI",
+    "Multimodal learning",
+    "Industrial anomaly detection"
+  ],
+  "education": [
+    {
+      "degree": "Integrated M.S./Ph.D. Program",
+      "institution": "Hanyang University",
+      "period": "Sep 2026 - Present",
+      "detail": "Started September 1, 2026.",
+      "department": "Department of Artificial Intelligence"
+    },
+    {
+      "degree": "Undergraduate Program",
+      "department": "School of Information and Communication Engineering",
+      "institution": "Chungbuk National University",
+      "period": "2020 - 2025"
+    }
+  ],
   "experience": [
-    { "role": "Research Member", "institution": "Intelligent Mobile Computing Lab, Hanyang University", "period": "Jan 2026 - Present", "detail": "Joined IMC Lab in January 2026; began the integrated M.S./Ph.D. program in September 2026.", "url": "https://imc.hanyang.ac.kr/" },
-    { "role": "Undergraduate Research", "institution": "CBNU Robotics Lab", "period": "Sep 2024 - Dec 2025", "detail": "Object-level anomaly detection for semiconductor microdevices.", "url": "/projects/semiconductor-anomaly-detection/" }
+    {
+      "role": "Research Member",
+      "institution": "Intelligent Mobile Computing Lab, Hanyang University",
+      "period": "Jan 2026 - Present",
+      "detail": "Joined IMC Lab in January 2026; began the integrated M.S./Ph.D. program in September 2026.",
+      "url": "https://imc.hanyang.ac.kr/"
+    },
+    {
+      "role": "Undergraduate Research",
+      "institution": "CBNU Robotics Lab",
+      "period": "Sep 2024 - Dec 2025",
+      "detail": "Object-level anomaly detection for semiconductor microdevices.",
+      "url": "/projects/semiconductor-anomaly-detection/"
+    }
   ],
   "awards": []
 }

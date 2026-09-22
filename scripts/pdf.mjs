@@ -13,7 +13,7 @@ export async function createPDF(p,projects,papers){
   const paragraph=text=>{doc.font('Helvetica').fontSize(9.5).fillColor(ink).text(text,left,doc.y,{width,lineGap:3});doc.moveDown(.4);};
   const row=(title,period,subtitle,detail)=>{if(doc.y>690)doc.addPage();const y=doc.y;doc.font('Helvetica-Bold').fontSize(10).fillColor(ink).text(title,left,y,{width:340});doc.font('Helvetica').fontSize(8.5).fillColor(muted).text(period,393,y+1,{width:154,align:'right'});doc.y=Math.max(y+17,doc.y);if(subtitle){doc.fontSize(9.5).fillColor(ink).text(subtitle,left,doc.y,{width});doc.moveDown(.25);}if(detail)paragraph(detail);doc.moveDown(.35);};
   section('Research interests');paragraph(p.interests.join(' / '));
-  section('Education');p.education.forEach(e=>row(e.degree,e.period,e.institution,''));
+  section('Education');p.education.forEach(e=>row(e.degree,e.period,[e.department,e.institution].filter(Boolean).join(', '),''));
   section('Research experience');p.experience.forEach(e=>row(e.role,e.period,e.institution,e.detail));
   section('Selected projects');projects.forEach(e=>row(e.title,e.period??'Public project','',e.summary));
   if(papers.length){section('Publications');papers.forEach(e=>paragraph(`${e.authors}. ${e.title}. ${e.venue}, ${e.year}.`));}
